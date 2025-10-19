@@ -1,5 +1,5 @@
 # SPLDownloadFromQQMusic
-这是一个从QQ音乐下载歌词的小程序，支持普通歌词和[SPL逐字歌词](https://moriafly.com/standards/spl.html)，建议配合音乐标签和[椒盐音乐](https://github.com/Moriafly/SaltPlayerSource)使用。** 目前只测试了小米音乐 **。
+这是一个从QQ音乐下载歌词的小程序，支持普通歌词和[SPL逐字歌词](https://moriafly.com/standards/spl.html)，建议配合音乐标签和[椒盐音乐](https://github.com/Moriafly/SaltPlayerSource)使用。目前只测试了小米音乐。
 
 为了方便音乐标签APP的识别和导入，歌词后缀一律使用`lrc`。歌词的命名方式是`[歌曲名 - 歌手甲&歌手乙&···.lrc]`。
 
