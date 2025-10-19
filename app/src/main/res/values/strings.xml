@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">歌词下载器</string>
+    <string name="hint_input_url">请输入歌曲链接或歌单链接</string>
+    <string name="btn_download_all">下载全部</string>
+    <string name="title_song_list">歌曲列表</string>
+    <string name="msg_processing">处理中…</string>
+    <string name="msg_complete">处理完成！</string>
+    <string name="msg_download_failed">下载失败</string>
+    <string name="msg_invalid_url">不支持的链接格式</string>
+    <string name="permission_required">需要存储权限来保存歌词文件</string>
+
+    <!-- 新增 -->
+    <string name="lyric_type_normal">普通歌词</string>
+    <string name="lyric_type_word_by_word">逐字歌词</string>
+    <string name="select_lyric_type">选择歌词类型:</string>
+    <string name="btn_parse">解析链接</string>
+
+    <!-- 下载对话框相关 -->
+    <string name="download_dialog_title">下载歌词</string>
+    <string name="download_dialog_message">选择要下载的歌词类型</string>
+    <string name="download_normal_lyric">下载普通歌词</string>
+    <string name="download_word_lyric">下载逐字歌词</string>
+    <string name="cancel">取消</string>
+</resources>

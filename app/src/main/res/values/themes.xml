@@ -1,0 +1,122 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- 浅色主题 -->
+    <style name="Theme.LyricDownloader" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primary_variant</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSecondaryVariant">@color/secondary_variant</item>
+        <item name="colorOnSecondary">@color/on_secondary</item>
+
+        <!-- 修复：移除自定义的 colorBackground，使用标准的 Material Design 属性 -->
+        <item name="android:colorBackground">@color/background</item>
+        <item name="colorOnBackground">@color/on_background</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+
+        <!-- 表面变体 -->
+        <item name="colorSurfaceVariant">@color/surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
+
+        <!-- 错误颜色 -->
+        <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/on_error</item>
+
+        <!-- 轮廓 -->
+        <item name="colorOutline">@color/outline</item>
+
+        <!-- 状态栏 -->
+        <item name="android:statusBarColor" >?attr/colorPrimaryVariant</item>
+        <item name="android:windowLightStatusBar" >true</item>
+
+        <!-- 导航栏 -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+
+        <!-- 组件样式 -->
+        <item name="materialButtonStyle">@style/Widget.LyricDownloader.Button</item>
+        <item name="editTextStyle">@style/Widget.LyricDownloader.TextInputEditText</item>
+        <item name="radioButtonStyle">@style/Widget.LyricDownloader.RadioButton</item>
+        <item name="progressBarStyle">@style/Widget.LyricDownloader.ProgressBar</item>
+
+        <!-- 移除ActionBar -->
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <!-- 按钮样式 -->
+    <style name="Widget.LyricDownloader.Button" parent="Widget.MaterialComponents.Button">
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingVertical">12dp</item>
+        <item name="android:paddingHorizontal">24dp</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="android:elevation">1dp</item>
+    </style>
+
+    <!-- 输入框样式 -->
+    <style name="Widget.LyricDownloader.TextInputEditText" parent="Widget.MaterialComponents.TextInputEditText.OutlinedBox">
+        <item name="boxCornerRadiusBottomEnd">16dp</item>
+        <item name="boxCornerRadiusBottomStart">16dp</item>
+        <item name="boxCornerRadiusTopEnd">16dp</item>
+        <item name="boxCornerRadiusTopStart">16dp</item>
+    </style>
+
+    <!-- 单选按钮样式 -->
+    <style name="Widget.LyricDownloader.RadioButton" parent="Widget.MaterialComponents.CompoundButton.RadioButton">
+        <item name="android:paddingVertical">8dp</item>
+        <item name="android:paddingHorizontal">4dp</item>
+    </style>
+
+    <!-- 进度条样式 -->
+    <style name="Widget.LyricDownloader.ProgressBar" parent="Widget.MaterialComponents.ProgressIndicator">
+        <item name="trackThickness">4dp</item>
+        <item name="indicatorColor">?attr/colorPrimary</item>
+        <item name="trackColor">?attr/colorOutline</item>
+    </style>
+
+    <style name="Theme.LyricDownloader.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="android:background">?attr/colorSurface</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/DialogTitleStyle</item>
+        <item name="materialAlertDialogBodyTextStyle">@style/DialogBodyStyle</item>
+        <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyle.Positive</item>
+        <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyle.Negative</item>
+        <item name="android:textColorPrimary">?attr/colorOnSurface</item>
+        <item name="android:textColorSecondary">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- 对话框标题样式 -->
+    <style name="DialogTitleStyle" parent="MaterialAlertDialog.Material3.Title.Text">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 对话框正文样式 -->
+    <style name="DialogBodyStyle" parent="MaterialAlertDialog.Material3.Body.Text">
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:lineSpacingExtra">4dp</item>
+    </style>
+
+    <style name="DialogButtonStyle" parent="Widget.Material3.Button.TextButton">
+        <item name="android:background">@color/dialog_button_background</item>
+        <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:paddingVertical">12dp</item>
+        <item name="android:paddingHorizontal">16dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="cornerRadius">0dp</item>
+        <item name="android:elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <style name="DialogButtonStyle.Positive" parent="DialogButtonStyle">
+        <item name="android:textColor">?attr/colorPrimary</item>
+    </style>
+
+    <style name="DialogButtonStyle.Negative" parent="DialogButtonStyle">
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+</resources>

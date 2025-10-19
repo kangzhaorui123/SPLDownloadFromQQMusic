@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:background="?attr/colorSurface">
+
+    <!-- 左侧面板：输入和控制区域 -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_margin="16dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="4dp"
+        app:contentPadding="16dp">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- 应用标题 -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/app_name"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+                    android:textAlignment="center"
+                    android:layout_marginBottom="24dp" />
+
+                <!-- URL输入部分 -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/hint_input_url"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="请输入QQ音乐链接"
+                    app:startIconDrawable="@drawable/ic_link">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_url"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textUri"
+                        android:maxLines="1" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- 歌词类型选择 -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/select_lyric_type"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="?attr/colorOutline"
+                    app:strokeWidth="1dp">
+
+                    <RadioGroup
+                        android:id="@+id/rg_lyric_type"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="8dp">
+
+                        <com.google.android.material.radiobutton.MaterialRadioButton
+                            android:id="@+id/rb_normal_lyric"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/lyric_type_normal"
+                            android:checked="true" />
+
+                        <com.google.android.material.radiobutton.MaterialRadioButton
+                            android:id="@+id/rb_word_by_word"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/lyric_type_word_by_word" />
+
+                    </RadioGroup>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- 操作按钮 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="24dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_parse"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/btn_parse"
+                        android:layout_marginEnd="8dp"
+                        style="@style/Widget.LyricDownloader.Button" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_download_all"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/btn_download_all"
+                        style="@style/Widget.LyricDownloader.Button" />
+
+                </LinearLayout>
+
+                <!-- 进度条 -->
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/progress_bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:indeterminate="true"
+                    android:visibility="gone"
+                    android:layout_marginTop="16dp" />
+
+                <!-- 状态信息 -->
+                <TextView
+                    android:id="@+id/tv_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+        </ScrollView>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- 右侧面板：歌曲列表 -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1.5"
+        android:layout_margin="16dp"
+        android:layout_marginStart="0dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="4dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <!-- 列表标题 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/title_song_list"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                android:padding="16dp" />
+
+            <!-- 歌曲列表 -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</LinearLayout>
