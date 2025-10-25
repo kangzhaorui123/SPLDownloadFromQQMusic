@@ -2,6 +2,8 @@ package com.kenny.spldownloader.model;
 
 import androidx.annotation.NonNull;
 
+import java.util.Objects;
+
 public class SongInfo {
     private String mid;
     private String songName;
@@ -56,5 +58,22 @@ public class SongInfo {
     @Override
     public String toString() {
         return songName + " - " + singer;
+    }
+
+    // 添加equals和hashCode方法，确保状态更新能正确反映在UI上
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SongInfo songInfo = (SongInfo) o;
+        return Objects.equals(mid, songInfo.mid) &&
+                Objects.equals(songName, songInfo.songName) &&
+                Objects.equals(singer, songInfo.singer) &&
+                downloadStatus == songInfo.downloadStatus;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mid, songName, singer, downloadStatus);
     }
 }

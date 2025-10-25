@@ -1,5 +1,6 @@
 package com.kenny.spldownloader;
 
+import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -7,6 +8,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -24,10 +26,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.kenny.spldownloader.adapter.SongAdapter;
 import com.kenny.spldownloader.model.SongInfo;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -37,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String CHANNEL_ID = "lyric_download_channel";
     private static final int NOTIFICATION_ID_SINGLE = 1001;
     private static final int NOTIFICATION_ID_BATCH = 1002;
+
+    private static final String TAG = "MainActivity";
 
     private EditText etUrl;
     private RadioGroup rgLyricType;
@@ -63,9 +67,13 @@ public class MainActivity extends AppCompatActivity {
         // 初始化 ViewModel
         songViewModel = new ViewModelProvider(this).get(SongViewModel.class);
 
-        // 设置Toolbar
+        // 设置Toolbar - 移除图标
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowHomeEnabled(false); // 移除图标
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false); // 移除返回箭头
+        }
 
         // 初始化组件
         initNotificationChannel();
@@ -241,6 +249,25 @@ public class MainActivity extends AppCompatActivity {
                 songViewModel.setParseError(null); // 清除错误状态
             }
         });
+
+        // 观察解析进度
+        songViewModel.getParseProgress().observe(this, progress -> {
+            if (progress != null) {
+                progressBar.setProgress(progress.current());
+                progressBar.setMax(progress.total());
+                showStatus(String.format("正在解析: %d/%d 首", progress.current(), progress.total()));
+            }
+        });
+
+        // 观察重试进度
+        songViewModel.getRetryProgress().observe(this, retryProgress -> {
+            if (retryProgress != null) {
+                showStatus(String.format("服务器不稳定，正在第 %d/%d 次重试 (%d 个任务)",
+                        retryProgress.currentRetry(),
+                        retryProgress.maxRetry(),
+                        retryProgress.retryingCount()));
+            }
+        });
     }
 
     /**
@@ -248,6 +275,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void startParseUrl(String url) {
         songViewModel.setLoading(true);
+        songViewModel.setParseProgress(new SongViewModel.ParseProgress(0, 0));
         songViewModel.clearSongs();
 
         showStatus("正在解析链接，请稍候...");
@@ -261,7 +289,9 @@ public class MainActivity extends AppCompatActivity {
 
                     String result = String.format(Locale.getDefault(), "解析完成，共找到 %d 首歌曲", parsedSongList.size());
                     showStatus(result);
-                    Toast.makeText(MainActivity.this, result, Toast.LENGTH_LONG).show();
+
+                    // 使用AlertDialog显示解析结果，而不是Toast
+                    showParseResultDialog("解析完成", result);
                 });
             }
 
@@ -269,7 +299,9 @@ public class MainActivity extends AppCompatActivity {
             public void onParseError(String errorMessage) {
                 runOnUiThread(() -> {
                     songViewModel.setLoading(false);
+                    songViewModel.setParseProgress(new SongViewModel.ParseProgress(0, 0));
                     songViewModel.setParseError(errorMessage);
+                    showParseResultDialog("解析失败", "解析失败: " + errorMessage);
                 });
             }
 
@@ -277,37 +309,44 @@ public class MainActivity extends AppCompatActivity {
             public void onSongInfoAdded(SongInfo songInfo) {
                 // 如果需要实时添加歌曲，可以在这里实现
             }
+
+            @Override
+            public void onParseProgress(int current, int total) {
+                runOnUiThread(() -> songViewModel.setParseProgress(new SongViewModel.ParseProgress(current, total)));
+            }
+
+            @Override
+            public void onRetryProgress(int retryCount, int retryingCount, int totalRetry) {
+                runOnUiThread(() -> songViewModel.setRetryProgress(new SongViewModel.RetryProgress(retryCount, totalRetry, retryingCount)));
+            }
         });
     }
 
     /**
-     * 显示下载对话框 - 使用原生 Material Design 2 效果
+     * 显示解析结果对话框
+     */
+    private void showParseResultDialog(String title, String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("确定", null)
+                .show();
+    }
+
+    /**
+     * 显示下载对话框 - 使用原生 AlertDialog
      */
     private void showDownloadDialog(final SongInfo songInfo, final int position) {
         // 获取当前选择的歌词类型
         final LrcFileManager.LyricType lyricType = getSelectedLyricType();
         String lyricTypeName = lyricType == LrcFileManager.LyricType.NORMAL ? "普通歌词" : "逐字歌词";
 
-        // 使用 MaterialAlertDialogBuilder 并应用默认主题（使用原生 MD2 效果）
-        MaterialAlertDialogBuilder builder =
-                new MaterialAlertDialogBuilder(this);
-
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("下载歌词")
                 .setMessage("是否下载《" + songInfo.getSongName() + "》的" + lyricTypeName + "？")
                 .setPositiveButton("下载", (dialog, which) -> startSingleDownload(songInfo, lyricType, position))
                 .setNegativeButton("取消", null)
                 .show();
-
-        // 移除了自定义按钮样式的代码，使用原生效果
-    }
-
-    /**
-     * 检查当前是否为深色主题
-     */
-    private boolean isDarkTheme() {
-        int nightModeFlags = getResources().getConfiguration().uiMode &
-                android.content.res.Configuration.UI_MODE_NIGHT_MASK;
-        return nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES;
     }
 
     /**
@@ -315,13 +354,6 @@ public class MainActivity extends AppCompatActivity {
      */
     private void startSingleDownload(SongInfo songInfo, LrcFileManager.LyricType lyricType, int position) {
         songViewModel.setLoading(true);
-        // 重置下载状态
-        songInfo.setDownloadStatus(SongInfo.DownloadStatus.NONE);
-        songViewModel.updateSongStatus(position, SongInfo.DownloadStatus.NONE);
-
-        // 发送开始下载通知
-        String lyricTypeName = lyricType == LrcFileManager.LyricType.NORMAL ? "普通歌词" : "逐字歌词";
-        sendSingleDownloadNotification("开始下载", "正在下载 " + songInfo.getSongName() + " 的" + lyricTypeName, true);
 
         // 使用线程池执行下载任务
         new Thread(() -> {
@@ -334,6 +366,10 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e) {
                 errorMessage = e.getMessage();
                 success = false;
+                // 记录详细的错误日志
+                Log.e(TAG, "单曲下载失败 - 歌曲: " + songInfo.getSongName() +
+                        " - MID: " + songInfo.getMid() +
+                        " - 错误: " + e.getMessage(), e);
             }
 
             final boolean finalSuccess = success;
@@ -343,29 +379,54 @@ public class MainActivity extends AppCompatActivity {
                 songViewModel.setLoading(false);
 
                 if (finalSuccess) {
-                    songInfo.setDownloadStatus(SongInfo.DownloadStatus.SUCCESS);
-                    songViewModel.updateSongStatus(position, SongInfo.DownloadStatus.SUCCESS);
+                    // 创建新的歌曲对象来确保状态更新
+                    SongInfo updatedSong = createUpdatedSong(songInfo, SongInfo.DownloadStatus.SUCCESS);
+                    songViewModel.updateSong(updatedSong);
 
                     // 发送成功通知
                     String folder = lyricType == LrcFileManager.LyricType.NORMAL ? "LRC" : "SPL";
                     sendSingleDownloadNotification("下载成功",
                             " " + songInfo.getSongName() + " \n保存到: Download/" + folder, true);
 
-                    // 使用Toast显示成功信息
-                    Toast.makeText(MainActivity.this, "下载成功: " + songInfo.getSongName(), Toast.LENGTH_LONG).show();
+                    // 使用AlertDialog显示成功信息
+                    showDownloadResultDialog("下载成功", "下载成功: " + songInfo.getSongName() + "\n保存到: Download/" + folder);
                 } else {
-                    songInfo.setDownloadStatus(SongInfo.DownloadStatus.FAILED);
-                    songViewModel.updateSongStatus(position, SongInfo.DownloadStatus.FAILED);
+                    // 创建新的歌曲对象来确保状态更新
+                    SongInfo updatedSong = createUpdatedSong(songInfo, SongInfo.DownloadStatus.FAILED);
+                    songViewModel.updateSong(updatedSong);
 
                     // 发送失败通知
                     sendSingleDownloadNotification("下载失败",
                             " " + songInfo.getSongName() + " \n错误: " + finalErrorMessage, false);
 
-                    // 使用Toast显示失败信息
-                    Toast.makeText(MainActivity.this, "下载失败: " + songInfo.getSongName() + " - " + finalErrorMessage, Toast.LENGTH_LONG).show();
+                    // 使用AlertDialog显示失败信息
+                    showDownloadResultDialog("下载失败", "下载失败: " + songInfo.getSongName() + " - " + finalErrorMessage);
                 }
             });
         }).start();
+    }
+
+    /**
+     * 创建更新后的歌曲对象（确保状态变化能被检测到）
+     */
+    private SongInfo createUpdatedSong(SongInfo original, SongInfo.DownloadStatus newStatus) {
+        SongInfo updated = new SongInfo();
+        updated.setMid(original.getMid());
+        updated.setSongName(original.getSongName());
+        updated.setSinger(original.getSinger());
+        updated.setDownloadStatus(newStatus);
+        return updated;
+    }
+
+    /**
+     * 显示下载结果对话框
+     */
+    private void showDownloadResultDialog(String title, String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("确定", null)
+                .show();
     }
 
     /**
@@ -376,18 +437,6 @@ public class MainActivity extends AppCompatActivity {
         btnDownloadAll.setEnabled(false);
         showStatus("开始批量下载...");
 
-        // 重置所有歌曲状态为NONE
-        List<SongInfo> songs = songViewModel.getSongList().getValue();
-        if (songs != null) {
-            for (int i = 0; i < songs.size(); i++) {
-                songs.get(i).setDownloadStatus(SongInfo.DownloadStatus.NONE);
-                songViewModel.updateSongStatus(i, SongInfo.DownloadStatus.NONE);
-            }
-        }
-
-        // 发送初始通知
-        sendBatchDownloadNotification(0, songs != null ? songs.size() : 0, 0, 0);
-
         // 使用线程池执行批量下载
         new Thread(() -> {
             int successCount = 0;
@@ -395,26 +444,42 @@ public class MainActivity extends AppCompatActivity {
             List<SongInfo> currentSongs = songViewModel.getSongList().getValue();
 
             if (currentSongs != null) {
+                // 重置所有歌曲状态为NONE
+                List<SongInfo> resetSongs = new ArrayList<>();
+                for (SongInfo song : currentSongs) {
+                    SongInfo resetSong = createUpdatedSong(song, SongInfo.DownloadStatus.NONE);
+                    resetSongs.add(resetSong);
+                }
+
+                // 在主线程更新初始状态
+                runOnUiThread(() -> songViewModel.setSongList(resetSongs));
+
+                // 发送初始通知
+                sendBatchDownloadNotification(0, currentSongs.size(), 0, 0);
+
                 for (int i = 0; i < currentSongs.size(); i++) {
-                    final int position = i;
-                    SongInfo song = currentSongs.get(i);
+                    SongInfo originalSong = currentSongs.get(i);
+                    SongInfo updatedSong;
+
                     try {
-                        lyricDownloader.downloadAndConvertSong(MainActivity.this, song, lyricType);
+                        lyricDownloader.downloadAndConvertSong(MainActivity.this, originalSong, lyricType);
                         successCount++;
-                        song.setDownloadStatus(SongInfo.DownloadStatus.SUCCESS);
-                        songViewModel.updateSongStatus(position, SongInfo.DownloadStatus.SUCCESS);
+                        updatedSong = createUpdatedSong(originalSong, SongInfo.DownloadStatus.SUCCESS);
                     } catch (Exception e) {
                         failCount++;
-                        // 设置下载失败状态
-                        song.setDownloadStatus(SongInfo.DownloadStatus.FAILED);
-                        songViewModel.updateSongStatus(position, SongInfo.DownloadStatus.FAILED);
+                        updatedSong = createUpdatedSong(originalSong, SongInfo.DownloadStatus.FAILED);
+                        // 记录详细的错误日志
+                        Log.e(TAG, "批量下载失败 - 歌曲: " + originalSong.getSongName() +
+                                " - MID: " + originalSong.getMid() +
+                                " - 错误: " + e.getMessage(), e);
                     }
 
+                    final SongInfo finalUpdatedSong = updatedSong;
                     final int current = i + 1;
                     final int finalSuccessCount = successCount;
                     final int finalFailCount = failCount;
 
-                    // 更新UI
+                    // 在主线程更新UI
                     runOnUiThread(() -> {
                         // 更新通知栏进度
                         sendBatchDownloadNotification(current, currentSongs.size(), finalSuccessCount, finalFailCount);
@@ -423,6 +488,9 @@ public class MainActivity extends AppCompatActivity {
                         showStatus(String.format(Locale.getDefault(),
                                 "正在下载第 %d/%d 首 (成功: %d, 失败: %d)",
                                 current, currentSongs.size(), finalSuccessCount, finalFailCount));
+
+                        // 更新歌曲列表状态
+                        songViewModel.updateSong(finalUpdatedSong);
                     });
                 }
             }
@@ -441,9 +509,9 @@ public class MainActivity extends AppCompatActivity {
                 // 更新状态显示
                 showStatus(result);
 
-                // 使用Toast显示完成信息
+                // 使用AlertDialog显示完成信息
                 String message = result + "\n文件保存在: " + LrcFileManager.getLrcDirectoryPath(lyricType);
-                Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
+                showDownloadResultDialog("批量下载完成", message);
             });
         }).start();
     }

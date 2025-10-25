@@ -37,7 +37,16 @@ public class SongAdapter extends ListAdapter<SongInfo, SongAdapter.ViewHolder> {
             // 检查内容是否相同（歌曲名、歌手、下载状态）
             return Objects.equals(oldItem.getSongName(), newItem.getSongName()) &&
                     Objects.equals(oldItem.getSinger(), newItem.getSinger()) &&
-                    Objects.equals(oldItem.getDownloadStatus(), newItem.getDownloadStatus());
+                    oldItem.getDownloadStatus().equals(newItem.getDownloadStatus());
+        }
+
+        @Override
+        public Object getChangePayload(@NonNull SongInfo oldItem, @NonNull SongInfo newItem) {
+            // 当只有下载状态改变时，返回一个payload来局部更新
+            if (oldItem.getDownloadStatus() != newItem.getDownloadStatus()) {
+                return newItem.getDownloadStatus();
+            }
+            return null;
         }
     };
 
@@ -100,42 +109,36 @@ public class SongAdapter extends ListAdapter<SongInfo, SongAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         SongInfo song = getItem(position);
-
-        holder.tvSongName.setText(song.getSongName() != null ? song.getSongName() : "");
-        holder.tvSinger.setText(song.getSinger() != null ? song.getSinger() : "");
-
-        // 根据下载状态设置芯片
-        if (song.getDownloadStatus() != null) {
-            switch (song.getDownloadStatus()) {
-                case SUCCESS:
-                    holder.chipStatus.setText("完成");
-                    holder.chipStatus.setChipBackgroundColorResource(R.color.success);
-                    holder.chipStatus.setChipIconResource(R.drawable.ic_check);
-                    break;
-                case FAILED:
-                    holder.chipStatus.setText("失败");
-                    holder.chipStatus.setChipBackgroundColorResource(R.color.error);
-                    holder.chipStatus.setChipIconResource(R.drawable.ic_error);
-                    break;
-                case NONE:
-                default:
-                    holder.chipStatus.setText("待下载");
-                    holder.chipStatus.setChipBackgroundColorResource(R.color.secondary);
-                    holder.chipStatus.setChipIconResource(R.drawable.ic_pending);
-                    break;
-            }
-        } else {
-            // 处理 downloadStatus 为 null 的情况
-            holder.chipStatus.setText("未知");
-            holder.chipStatus.setChipBackgroundColorResource(R.color.secondary);
-            holder.chipStatus.setChipIconResource(R.drawable.ic_pending);
-        }
+        holder.bind(song);
 
         holder.itemView.setOnClickListener(v -> {
             if (listener != null && position >= 0 && position < getItemCount()) {
                 listener.onItemClick(song, position);
             }
         });
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position, @NonNull List<Object> payloads) {
+        if (payloads.isEmpty()) {
+            // 没有payload，正常绑定
+            onBindViewHolder(holder, position);
+        } else {
+            // 有payload，只更新状态部分
+            SongInfo song = getItem(position);
+            for (Object payload : payloads) {
+                if (payload instanceof SongInfo.DownloadStatus) {
+                    holder.updateStatus((SongInfo.DownloadStatus) payload);
+                    break;
+                }
+            }
+            // 仍然设置点击监听器
+            holder.itemView.setOnClickListener(v -> {
+                if (listener != null && position >= 0 && position < getItemCount()) {
+                    listener.onItemClick(song, position);
+                }
+            });
+        }
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -147,6 +150,40 @@ public class SongAdapter extends ListAdapter<SongInfo, SongAdapter.ViewHolder> {
             tvSongName = itemView.findViewById(R.id.tv_song_name);
             tvSinger = itemView.findViewById(R.id.tv_singer);
             chipStatus = itemView.findViewById(R.id.chip_status);
+        }
+
+        public void bind(SongInfo song) {
+            tvSongName.setText(song.getSongName() != null ? song.getSongName() : "");
+            tvSinger.setText(song.getSinger() != null ? song.getSinger() : "");
+            updateStatus(song.getDownloadStatus());
+        }
+
+        public void updateStatus(SongInfo.DownloadStatus status) {
+            if (status != null) {
+                switch (status) {
+                    case SUCCESS:
+                        chipStatus.setText("完成");
+                        chipStatus.setChipBackgroundColorResource(R.color.success);
+                        chipStatus.setChipIconResource(R.drawable.ic_check);
+                        break;
+                    case FAILED:
+                        chipStatus.setText("失败");
+                        chipStatus.setChipBackgroundColorResource(R.color.error);
+                        chipStatus.setChipIconResource(R.drawable.ic_error);
+                        break;
+                    case NONE:
+                    default:
+                        chipStatus.setText("待下载");
+                        chipStatus.setChipBackgroundColorResource(R.color.secondary);
+                        chipStatus.setChipIconResource(R.drawable.ic_pending);
+                        break;
+                }
+            } else {
+                // 处理 downloadStatus 为 null 的情况
+                chipStatus.setText("未知");
+                chipStatus.setChipBackgroundColorResource(R.color.secondary);
+                chipStatus.setChipIconResource(R.drawable.ic_pending);
+            }
         }
     }
 
