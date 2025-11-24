@@ -1,13 +1,17 @@
-package com.kenny.spldownloader;
+// LrcConverter.java
+package com.kenny.spldownloader.converter;
 
+import android.util.Log;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.*;
 
 public class LrcConverter {
+    private static final String TAG = "LrcConverter";
 
     public String convertYrcToStandardLrc(String yrcContent) {
         if (yrcContent == null || yrcContent.isEmpty()) {
+            Log.w(TAG, "YRC内容为空");
             return "";
         }
 
@@ -21,20 +25,24 @@ public class LrcConverter {
                 continue;
             }
 
+            // 保留元数据行
             if (line.startsWith("[ti:") || line.startsWith("[ar:") || line.startsWith("[al:") ||
                     line.startsWith("[by:") || line.startsWith("[offset:")) {
                 result.append(line).append("\n");
                 continue;
             }
 
+            // 转换时间轴行
             if (line.startsWith("[") && line.contains("]") && line.contains("(") && line.contains(")")) {
                 String convertedLine = convertYrcLine(line);
                 if (convertedLine != null && !convertedLine.isEmpty()) {
                     result.append(convertedLine).append("\n");
                 }
             } else if (line.startsWith("[") && line.contains("]") && !line.contains("(")) {
+                // 普通LRC行
                 result.append(line).append("\n");
             } else {
+                // 其他内容
                 result.append(line).append("\n");
             }
         }
@@ -85,7 +93,7 @@ public class LrcConverter {
             }
 
         } catch (Exception e) {
-            System.err.println("转换行失败: " + line + ", 错误: " + e.getMessage());
+            Log.e(TAG, "转换行失败: " + line + ", 错误: " + e.getMessage());
             int firstBracketEnd = line.indexOf(']');
             return firstBracketEnd != -1 ? line.substring(firstBracketEnd + 1) : line;
         }
@@ -96,7 +104,7 @@ public class LrcConverter {
         long minutes = totalSeconds / 60;
         long seconds = totalSeconds % 60;
         long hundredths = (milliseconds % 1000) / 10;
-        // 修复：明确指定Locale为US，确保时间格式一致
+
         return String.format(Locale.US, "[%02d:%02d.%02d]", minutes, seconds, hundredths);
     }
 }

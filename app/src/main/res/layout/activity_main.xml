@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:title="@string/app_name"
-            app:navigationIcon="@drawable/ic_music_note" />
+            app:navigationIcon="@null" /> <!-- 移除导航图标 -->
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -132,12 +132,14 @@
 
                 </LinearLayout>
 
-                <!-- 进度条 -->
-                <com.google.android.material.progressindicator.LinearProgressIndicator
+                <!-- 进度条 - 改为水平进度条 -->
+                <ProgressBar
                     android:id="@+id/progress_bar"
+                    style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:indeterminate="true"
+                    android:progress="0"
+                    android:max="100"
                     android:visibility="gone"
                     android:layout_marginTop="16dp" />
 

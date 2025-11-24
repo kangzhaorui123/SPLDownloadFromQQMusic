@@ -26,8 +26,7 @@
         android:theme="@style/Theme.LyricDownloader">
 
         <activity
-            android:name=".MainActivity"
-            android:screenOrientation="unspecified"
+            android:name=".ui.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

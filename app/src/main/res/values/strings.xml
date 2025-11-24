@@ -21,4 +21,9 @@
     <string name="download_normal_lyric">下载普通歌词</string>
     <string name="download_word_lyric">下载逐字歌词</string>
     <string name="cancel">取消</string>
+
+    <!-- 通知相关 -->
+    <string name="notification_channel_name">歌词下载通知</string>
+    <string name="notification_channel_description">显示歌词下载进度和结果</string>
+    <string name="type_in_link">请输入QQ音乐链接</string>
 </resources>
