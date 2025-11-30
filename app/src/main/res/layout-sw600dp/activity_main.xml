@@ -1,20 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal"
-    android:background="?attr/colorSurface">
+    android:background="?android:attr/colorBackground">
 
-    <!-- 左侧面板：输入和控制区域 -->
-    <com.google.android.material.card.MaterialCardView
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar"
         android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:navigationIcon="@null"
+            app:title="@string/app_name" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- 输入卡片 - 平板布局中宽度更大 -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/input_card"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_margin="16dp"
         app:cardCornerRadius="16dp"
-        app:cardElevation="4dp"
-        app:contentPadding="16dp">
+        app:cardElevation="2dp"
+        app:contentPadding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/guideline"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/app_bar">
 
         <ScrollView
             android:layout_width="match_parent"
@@ -25,34 +46,19 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- 应用标题 -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/app_name"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
-                    android:textAlignment="center"
-                    android:layout_marginBottom="24dp" />
-
-                <!-- URL输入部分 -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/hint_input_url"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                    android:layout_marginBottom="8dp" />
-
+                <!-- 输入部分 -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="请输入QQ音乐链接"
-                    app:startIconDrawable="@drawable/ic_link">
+                    android:hint="@string/hint_input_url"
+                    app:startIconDrawable="@drawable/ic_link"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/et_url"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="textUri"
+                        android:inputType="text"
                         android:maxLines="1" />
 
                 </com.google.android.material.textfield.TextInputLayout>
@@ -105,7 +111,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginTop="24dp">
+                    android:layout_marginTop="16dp">
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_parse"
@@ -127,22 +133,24 @@
                 </LinearLayout>
 
                 <!-- 进度条 -->
-                <com.google.android.material.progressindicator.LinearProgressIndicator
+                <ProgressBar
                     android:id="@+id/progress_bar"
+                    style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:indeterminate="true"
+                    android:progress="0"
+                    android:max="100"
                     android:visibility="gone"
                     android:layout_marginTop="16dp" />
 
-                <!-- 状态信息 -->
+                <!-- 状态文本 -->
                 <TextView
                     android:id="@+id/tv_status"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
                     android:textColor="?attr/colorOnSurfaceVariant"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="8dp"
                     android:gravity="center"
                     android:visibility="gone" />
 
@@ -152,22 +160,24 @@
 
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- 右侧面板：歌曲列表 -->
+    <!-- 歌曲列表卡片 - 平板布局中宽度更大 -->
     <com.google.android.material.card.MaterialCardView
+        android:id="@+id/list_card"
         android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1.5"
+        android:layout_height="0dp"
         android:layout_margin="16dp"
-        android:layout_marginStart="0dp"
         app:cardCornerRadius="16dp"
-        app:cardElevation="4dp">
+        app:cardElevation="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/guideline"
+        app:layout_constraintTop_toBottomOf="@+id/app_bar">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <!-- 列表标题 -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -175,7 +185,6 @@
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
                 android:padding="16dp" />
 
-            <!-- 歌曲列表 -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recycler_view"
                 android:layout_width="match_parent"
@@ -186,4 +195,12 @@
 
     </com.google.android.material.card.MaterialCardView>
 
-</LinearLayout>
+    <!-- 指导线 - 平板布局中分割比例更大 -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.35" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

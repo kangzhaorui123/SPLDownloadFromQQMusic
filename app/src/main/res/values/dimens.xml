@@ -1,0 +1,16 @@
+<resources>
+    <!-- 标准尺寸 -->
+    <dimen name="card_corner_radius">16dp</dimen>
+    <dimen name="card_elevation">2dp</dimen>
+    <dimen name="card_margin">16dp</dimen>
+    <dimen name="content_padding">16dp</dimen>
+
+    <!-- 按钮尺寸 -->
+    <dimen name="button_height">48dp</dimen>
+    <dimen name="button_corner_radius">24dp</dimen>
+
+    <!-- 间距 -->
+    <dimen name="spacing_small">8dp</dimen>
+    <dimen name="spacing_medium">16dp</dimen>
+    <dimen name="spacing_large">24dp</dimen>
+</resources>

@@ -54,6 +54,9 @@ public class MainActivity extends AppCompatActivity {
     private UrlParser urlParser;
     private TaskExecutor taskExecutor;
 
+    // 分页相关常量
+    private static final int PAGE_SIZE = 20;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
 
         initComponents();
         initViews();
+        setupPagination();
         setupObservers();
         checkPermissions();
         initNotificationChannel();
@@ -92,7 +96,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         adapter = new SongAdapter(this);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
         recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
 
@@ -100,24 +105,46 @@ public class MainActivity extends AppCompatActivity {
         adapter.setOnItemClickListener(this::showDownloadDialog);
     }
 
-    private void setupButtonListeners() {
-        // 解析链接按钮
-        btnParse.setOnClickListener(v -> {
-            String url = etUrl.getText().toString().trim();
-            if (url.isEmpty()) {
-                showToast("请输入QQ音乐链接");
-                return;
-            }
+    private void setupPagination() {
+        // 设置 RecyclerView 滚动监听
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
 
-            if (!PermissionManager.hasRequiredPermissions(this)) {
-                String[] permissions = PermissionManager.getRequiredPermissions(this);
-                PermissionManager.requestPermissions(this, permissions);
-                showStatus("请先授予存储权限");
-                return;
-            }
+                LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+                if (layoutManager != null) {
+                    int totalItemCount = layoutManager.getItemCount();
+                    int lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition();
 
-            parseUrl(url);
+                    // 检查是否滚动到底部并且是搜索模式
+                    Boolean loadMoreLoading = songViewModel.getLoadMoreLoading().getValue();
+                    Boolean hasMoreData = songViewModel.getHasMoreData().getValue();
+
+                    if (loadMoreLoading != null && hasMoreData != null &&
+                            !loadMoreLoading &&
+                            hasMoreData &&
+                            songViewModel.isSearchMode() &&
+                            lastVisibleItemPosition >= totalItemCount - 3) {
+
+                        loadMoreSongs();
+                    }
+                }
+            }
         });
+
+        // 设置适配器的加载更多监听器
+        adapter.setOnLoadMoreListener(() -> {
+            Boolean loadMoreLoading = songViewModel.getLoadMoreLoading().getValue();
+            if (songViewModel.isSearchMode() && loadMoreLoading != null && !loadMoreLoading) {
+                loadMoreSongs();
+            }
+        });
+    }
+
+    private void setupButtonListeners() {
+        // 解析按钮
+        btnParse.setOnClickListener(v -> parseInput());
 
         // 下载全部按钮
         btnDownloadAll.setOnClickListener(v -> {
@@ -150,6 +177,12 @@ public class MainActivity extends AppCompatActivity {
             btnParse.setEnabled(!isLoading);
         });
 
+        // 观察加载更多状态
+        songViewModel.getLoadMoreLoading().observe(this, loading -> adapter.setLoading(loading));
+
+        // 观察是否有更多数据
+        songViewModel.getHasMoreData().observe(this, hasMore -> adapter.setHasMoreData(hasMore));
+
         // 观察错误信息
         songViewModel.getErrorMessage().observe(this, error -> {
             if (error != null && !error.isEmpty()) {
@@ -166,11 +199,40 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // 在 MainActivity.java 的 parseUrl 方法中添加更详细的日志
-    private void parseUrl(String url) {
-        songViewModel.setLoading(true);
-        showStatus("正在解析链接...");
+    private void parseInput() {
+        String input = etUrl.getText().toString().trim();
+        if (input.isEmpty()) {
+            showToast("请输入QQ音乐链接或歌曲名称");
+            return;
+        }
 
+        if (!PermissionManager.hasRequiredPermissions(this)) {
+            String[] permissions = PermissionManager.getRequiredPermissions(this);
+            PermissionManager.requestPermissions(this, permissions);
+            showStatus("请先授予存储权限");
+            return;
+        }
+
+        songViewModel.setLoading(true);
+
+        // 自动判断输入类型
+        if (isUrl(input)) {
+            showStatus("正在解析链接...");
+            songViewModel.setSearchMode(false);
+            parseUrl(input);
+        } else {
+            showStatus("正在搜索歌曲...");
+            songViewModel.setSearchMode(true);
+            searchSongs(input, 1);
+        }
+    }
+
+    private boolean isUrl(String input) {
+        return input.startsWith("http://") || input.startsWith("https://") ||
+                input.contains("qq.com") || input.contains("y.qq.com");
+    }
+
+    private void parseUrl(String url) {
         // 使用线程执行网络请求，避免在主线程执行
         new Thread(() -> {
             try {
@@ -195,6 +257,86 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         }).start();
+    }
+
+    private void searchSongs(String keyword, int page) {
+        songViewModel.setCurrentSearchKeyword(keyword);
+
+        if (page == 1) {
+            songViewModel.setLoading(true);
+            songViewModel.resetPagination();
+        } else {
+            songViewModel.setLoadMoreLoading(true);
+            adapter.setLoading(true);
+            adapter.setLoadFailed(false);
+        }
+
+        new Thread(() -> {
+            try {
+                Log.d(TAG, "开始搜索: " + keyword + ", 页码: " + page);
+                List<SongInfo> songs = urlParser.searchByKeyword(keyword, page, PAGE_SIZE);
+
+                runOnUiThread(() -> {
+                    if (page == 1) {
+                        // 第一页，替换数据
+                        songViewModel.setSongList(songs);
+                        songViewModel.setLoading(false);
+                        showToast("搜索成功，找到 " + songs.size() + " 首歌曲");
+                    } else {
+                        // 加载更多，追加数据
+                        songViewModel.appendSongList(songs);
+                        songViewModel.setLoadMoreLoading(false);
+                        adapter.setLoading(false);
+
+                        if (songs.size() < PAGE_SIZE) {
+                            // 没有更多数据了
+                            songViewModel.setHasMoreData(false);
+                            adapter.setHasMoreData(false);
+                            showToast("已加载所有歌曲");
+                        } else {
+                            showToast("已加载第 " + page + " 页歌曲");
+                        }
+                    }
+
+                    // 更新分页状态
+                    if (!songs.isEmpty()) {
+                        songViewModel.incrementPage();
+                        // 只有在搜索模式下并且返回了完整一页数据时才显示加载更多
+                        if (songs.size() == PAGE_SIZE) {
+                            songViewModel.setHasMoreData(true);
+                        }
+                    }
+
+                    Log.d(TAG, "搜索成功，当前页码: " + songViewModel.getCurrentPage());
+                });
+
+            } catch (Exception e) {
+                Log.e(TAG, "搜索失败: " + e.getMessage(), e);
+
+                runOnUiThread(() -> {
+                    if (page == 1) {
+                        songViewModel.setLoading(false);
+                        String errorMessage = "搜索失败: " + e.getMessage();
+                        showErrorDialog("搜索失败", errorMessage);
+                    } else {
+                        songViewModel.setLoadMoreLoading(false);
+                        adapter.setLoading(false);
+                        adapter.setLoadFailed(true);
+                        showToast("加载更多失败: " + e.getMessage());
+                    }
+                    Log.e(TAG, "搜索失败: " + e.getMessage());
+                });
+            }
+        }).start();
+    }
+
+    private void loadMoreSongs() {
+        String keyword = songViewModel.getCurrentSearchKeyword();
+        int nextPage = songViewModel.getCurrentPage();
+
+        if (keyword != null && !keyword.isEmpty()) {
+            searchSongs(keyword, nextPage);
+        }
     }
 
     private void showDownloadDialog(SongInfo song, int position) {

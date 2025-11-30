@@ -1,4 +1,4 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- 浅色主题 -->
     <style name="Theme.LyricDownloader" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <item name="colorPrimary">@color/primary</item>
@@ -50,7 +50,7 @@
         <item name="android:insetBottom">0dp</item>
         <item name="android:paddingVertical">12dp</item>
         <item name="android:paddingHorizontal">24dp</item>
-        <item name="cornerRadius">20dp</item>
+        <item name="cornerRadius">15dp</item>
         <item name="android:elevation">1dp</item>
     </style>
 
